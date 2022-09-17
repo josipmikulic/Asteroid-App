@@ -59,6 +59,7 @@ class MainFragment : Fragment() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        viewModel.onMenuItemSelected(item.itemId)
         return true
     }
 

@@ -28,7 +28,7 @@ class RefreshDataWorker(private var appContext: Context, params: WorkerParameter
         val repository = AsteroidRepository(localDataSource, remoteDataSource)
 
         return try {
-            val todayDate = dateFormatter.parseDate(Date(), Constants.API_QUERY_DATE_FORMAT)
+            val todayDate = dateFormatter.parseDate(Date())
 
             todayDate?.let {
                 repository.clearOldAsteroids(todayDate)

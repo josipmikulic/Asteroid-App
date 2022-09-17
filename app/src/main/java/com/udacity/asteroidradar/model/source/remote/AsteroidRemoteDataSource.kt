@@ -9,8 +9,8 @@ import retrofit2.http.Query
 
 class AsteroidRemoteDataSource(private val asteroidService: AsteroidService) {
 
-    suspend fun getAllFromDate(date : String): List<Asteroid> {
-        val jsonObject = asteroidService.retrofitService.getAllFromDate(date)
+    suspend fun getAllFromDate(startDate: String, endDate: String): List<Asteroid> {
+        val jsonObject = asteroidService.retrofitService.getAllFromDate(startDate, endDate)
         return parseAsteroidsJsonResult(JSONObject(jsonObject))
     }
 
@@ -28,7 +28,10 @@ class AsteroidRemoteDataSource(private val asteroidService: AsteroidService) {
 interface AsteroidApi {
 
     @GET("neo/rest/v1/feed")
-    suspend fun getAllFromDate(@Query("start_date") startDate: String): String
+    suspend fun getAllFromDate(
+        @Query("start_date") startDate: String,
+        @Query("end_date") endDate: String
+    ): String
 
     @GET("neo/rest/v1/feed/{asteroidId}")
     suspend fun get(@Path("asteroidId") asteroidId: Long): Asteroid

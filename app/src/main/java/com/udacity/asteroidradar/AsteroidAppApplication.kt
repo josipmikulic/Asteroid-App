@@ -24,6 +24,7 @@ class AsteroidAppApplication : Application() {
     private fun setupRecurringWork() {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.UNMETERED)
+            .setRequiresBatteryNotLow(true)
             .setRequiresCharging(true)
             .build()
         val repeatingRequest =

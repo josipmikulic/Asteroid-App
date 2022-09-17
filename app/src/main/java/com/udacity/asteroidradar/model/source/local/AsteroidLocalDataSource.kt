@@ -1,5 +1,6 @@
 package com.udacity.asteroidradar.model.source.local
 
+import androidx.lifecycle.LiveData
 import androidx.room.*
 import com.udacity.asteroidradar.model.Asteroid
 
@@ -31,9 +32,8 @@ class AsteroidLocalDataSource(private val dataSource: AsteroidDao) {
         return dataSource.getAll()
     }
 
-
-    suspend fun getAllAsteroidsFromDate(date: String): List<Asteroid> {
-        return dataSource.getAllAsteroidsFromDate(date)
+    suspend fun getAllAsteroidsFromDate(startDate: String, endDate: String): List<Asteroid> {
+        return dataSource.getAllAsteroidsFromDate(startDate, endDate)
     }
 
     suspend fun clearOldAsteroids(date: String) {
@@ -57,11 +57,11 @@ interface AsteroidDao {
     @Query("DELETE FROM asteroid_database")
     suspend fun clear()
 
-    @Query("SELECT * FROM asteroid_database ORDER BY id ASC")
+    @Query("SELECT * FROM asteroid_database ORDER BY closeApproachDate ASC")
     fun getAll(): List<Asteroid>
 
-    @Query("SELECT * FROM asteroid_database WHERE closeApproachDate >= :date ORDER BY closeApproachDate ASC")
-    fun getAllAsteroidsFromDate(date: String): List<Asteroid>
+    @Query("SELECT * FROM asteroid_database WHERE closeApproachDate >= :startDate AND closeApproachDate < :endDate ORDER BY closeApproachDate ASC")
+    fun getAllAsteroidsFromDate(startDate: String, endDate: String): List<Asteroid>
 
     @Query("DELETE FROM asteroid_database WHERE closeApproachDate < :date")
     fun clearOldAsteroids(date: String)

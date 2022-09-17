@@ -10,10 +10,10 @@ class DateFormatter {
         Locale.getDefault()
     )
 
-    fun parseDate(date: Date, format: String): String? {
+    fun parseDate(date: Date): String? {
         var stringDate: String? = null
         try {
-            stringDate = simpleDateFormat.format(Date(System.currentTimeMillis())).toString()
+            stringDate = simpleDateFormat.format(date).toString()
         } catch (e: Exception) {
             Log.d("DateFormatter", e.toString())
         }

@@ -2,12 +2,15 @@ package com.udacity.asteroidradar.model.source
 
 import android.util.Log
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.liveData
 import com.udacity.asteroidradar.model.Asteroid
 import com.udacity.asteroidradar.model.PictureOfDay
 import com.udacity.asteroidradar.model.source.local.AsteroidLocalDataSource
 import com.udacity.asteroidradar.model.source.remote.AsteroidRemoteDataSource
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlin.coroutines.CoroutineContext
 
 class AsteroidRepository(
     private val localDataSource: AsteroidLocalDataSource,
@@ -30,23 +33,28 @@ class AsteroidRepository(
         emit(asteroid)
     }
 
-    suspend fun getAllAsteroidFromDate(date: String): LiveData<List<Asteroid>> =
-        liveData(Dispatchers.IO) {
-            var asteroids = localDataSource.getAllAsteroidsFromDate(date)
-            emit(asteroids)
+    suspend fun getAllAsteroidFromDate(
+        startDate: String,
+        endDate: String
+    ): List<Asteroid> {
+        return withContext(Dispatchers.IO) {
+            val asteroids = if (startDate.isEmpty() && endDate.isEmpty()) {
+                localDataSource.getAll()
+            } else {
+                localDataSource.getAllAsteroidsFromDate(startDate, endDate)
+            }
 
             try {
-                remoteDataSource.getAllFromDate(date).let { remoteAsteroids ->
-                    asteroids = remoteAsteroids
+                remoteDataSource.getAllFromDate(startDate, endDate).let { remoteAsteroids ->
                     localDataSource.insertAll(remoteAsteroids)
                 }
             } catch (e: Exception) {
                 Log.d("AsteroidRepository", e.stackTraceToString())
             }
 
-            emit(asteroids)
+            asteroids
         }
-
+    }
 
     suspend fun getPictureOfTheDay(): LiveData<PictureOfDay> = liveData(Dispatchers.IO) {
         try {
@@ -57,8 +65,8 @@ class AsteroidRepository(
         }
     }
 
-    suspend fun refreshAsteroidData(date: String) {
-        remoteDataSource.getAllFromDate(date).let { remoteAsteroids ->
+    suspend fun refreshAsteroidData(startDate: String) {
+        remoteDataSource.getAllFromDate(startDate, "").let { remoteAsteroids ->
             localDataSource.insertAll(remoteAsteroids)
         }
     }

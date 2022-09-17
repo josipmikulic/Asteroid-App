@@ -6,11 +6,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.udacity.asteroidradar.Constants
 import com.udacity.asteroidradar.DateFormatter
+import com.udacity.asteroidradar.R
 import com.udacity.asteroidradar.model.Asteroid
 import com.udacity.asteroidradar.model.PictureOfDay
 import com.udacity.asteroidradar.model.source.AsteroidRepository
 import kotlinx.coroutines.launch
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 class MainViewModel(private val asteroidRepository: AsteroidRepository) : ViewModel() {
 
@@ -18,7 +20,7 @@ class MainViewModel(private val asteroidRepository: AsteroidRepository) : ViewMo
     val pictureOfDay: LiveData<PictureOfDay>
         get() = _pictureOfDay
 
-    private var _asteroids: LiveData<List<Asteroid>> = MutableLiveData()
+    private var _asteroids: MutableLiveData<List<Asteroid>> = MutableLiveData()
     val asteroids: LiveData<List<Asteroid>>
         get() = _asteroids
 
@@ -27,21 +29,45 @@ class MainViewModel(private val asteroidRepository: AsteroidRepository) : ViewMo
         get() = _navigateToDetails
 
     private val dateFormatter = DateFormatter()
+    private var startDate: String = ""
+    private var endDate: String = ""
 
     init {
-        fetchData()
+        startDate = dateFormatter.parseDate(Date()) ?: ""
+        endDate = dateFormatter.parseDate(getDateWeekAfterToday()) ?: ""
+        fetchAsteroidsData()
+        fetchPictureOfTheDayData()
     }
 
-    private fun fetchData() {
+    private fun fetchPictureOfTheDayData() {
         viewModelScope.launch {
-            val todayDate = dateFormatter.parseDate(Date(), Constants.API_QUERY_DATE_FORMAT)
-
-            todayDate?.let {
-                _asteroids = asteroidRepository.getAllAsteroidFromDate(it)
-            }
-
             _pictureOfDay = asteroidRepository.getPictureOfTheDay()
+        }
+    }
 
+    private fun fetchAsteroidsData() {
+        viewModelScope.launch {
+            _asteroids.value = asteroidRepository.getAllAsteroidFromDate(startDate, endDate)
+        }
+    }
+
+    fun onMenuItemSelected(itemId: Int) {
+        when (itemId) {
+            R.id.show_today_asteroids_menu -> {
+                startDate = dateFormatter.parseDate(Date()) ?: ""
+                endDate = dateFormatter.parseDate(getTomorrowDate()) ?: ""
+                fetchAsteroidsData()
+            }
+            R.id.show_week_asteroids_menu -> {
+                startDate = dateFormatter.parseDate(Date()) ?: ""
+                endDate = dateFormatter.parseDate(getDateWeekAfterToday()) ?: ""
+                fetchAsteroidsData()
+            }
+            R.id.show_all_asteroids_menu -> {
+                startDate = ""
+                endDate = ""
+                fetchAsteroidsData()
+            }
         }
     }
 
@@ -51,5 +77,13 @@ class MainViewModel(private val asteroidRepository: AsteroidRepository) : ViewMo
 
     fun onNavigationDone() {
         _navigateToDetails.value = null
+    }
+
+    private fun getTomorrowDate() : Date {
+        return Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1))
+    }
+
+    private fun getDateWeekAfterToday() : Date {
+        return Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(7))
     }
 }
